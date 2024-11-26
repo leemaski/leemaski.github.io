@@ -146,6 +146,7 @@ body {
 .product-card h3 {
     margin: 0.5rem 0;
     font-size: 1rem;
+    color: var(--tg-theme-accent-text-color);
 }
 
 .price {
