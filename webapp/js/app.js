@@ -4,7 +4,7 @@ tg.expand();
 // Initialize variables
 let currentCategory = null;
 let userBalance = 0;
-const API_BASE_URL = 'http://localhost:8080'; // Update this when deploying
+const API_BASE_URL = 'http://localhost:8080';
 
 // DOM Elements
 const categoriesContainer = document.getElementById('categories');
@@ -16,19 +16,31 @@ const closeModal = document.querySelector('.close');
 const paymentButtons = document.querySelectorAll('.payment-button');
 const amountInput = document.getElementById('amount');
 
+// Common fetch options
+const fetchOptions = {
+    mode: 'cors',
+    credentials: 'include',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    }
+};
+
 // Load initial data
 async function initialize() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/init`, {
+            ...fetchOptions,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
                 user_id: tg.initDataUnsafe.user.id
-            }),
-            credentials: 'include'
+            })
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         userBalance = data.balance;
@@ -72,8 +84,14 @@ function renderCategories(categories) {
 async function loadProducts(categoryId) {
     try {
         const response = await fetch(`${API_BASE_URL}/api/products/${categoryId}`, {
-            credentials: 'include'
+            ...fetchOptions,
+            method: 'GET'
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const products = await response.json();
         renderProducts(products);
     } catch (error) {
@@ -102,16 +120,17 @@ function renderProducts(products) {
 async function buyProduct(productId) {
     try {
         const response = await fetch(`${API_BASE_URL}/api/buy`, {
+            ...fetchOptions,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
                 user_id: tg.initDataUnsafe.user.id,
                 product_id: productId
-            }),
-            credentials: 'include'
+            })
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const result = await response.json();
         if (result.success) {
@@ -144,17 +163,18 @@ async function initiatePayment(method) {
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/payment/create`, {
+            ...fetchOptions,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify({
                 user_id: tg.initDataUnsafe.user.id,
                 amount: amount,
                 method: method
-            }),
-            credentials: 'include'
+            })
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const result = await response.json();
         if (result.success) {
