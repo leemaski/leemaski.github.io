@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Store</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="balance-section">
+            <div>
+                <div class="balance-label">Your Balance</div>
+                <div class="balance-amount"><span id="userBalance">0</span> ₽</div>
+            </div>
+            <button class="button" id="topupButton">Top Up</button>
+        </div>
+
+        <div class="categories" id="categories">
+            <!-- Categories will be added here dynamically -->
+        </div>
+
+        <div class="products" id="products">
+            <!-- Products will be added here dynamically -->
+        </div>
+    </div>
+
+    <div id="topupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Top Up Balance</div>
+                <button class="close">&times;</button>
+            </div>
+            <div class="input-group">
+                <label class="input-label" for="amount">Amount (₽)</label>
+                <input type="number" id="amount" class="input-field" placeholder="Enter amount" min="1">
+            </div>
+            <div class="payment-methods">
+                <button class="payment-button" data-method="card">
+                    💳 Bank Card
+                </button>
+                <button class="payment-button" data-method="crypto">
+                    ₿ Crypto
+                </button>
+                <button class="payment-button" data-method="qiwi">
+                    🥝 QIWI
+                </button>
+                <button class="payment-button" data-method="yoomoney">
+                    💰 YooMoney
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
