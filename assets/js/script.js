@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // Работа с телеграмом
+    let tg = window.Telegram.WebApp;
+    document.getElementById("logo-username").textContent = tg.initDataUnsafe.user.first_name + " " + tg.initDataUnsafe.user.last_name;
+    
+    
+
     // Mobile menu toggle
     const menuToggle = document.getElementById('mobile-menu');
     const navLinks = document.querySelector('.nav-links');
@@ -25,13 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
             cartCount.textContent = itemsInCart;
             
             // Animation effect
-            button.textContent = 'Added!';
+            button.textContent = 'ДОБАВЛЕНО';
             button.style.backgroundColor = '#27ae60';
             
-            setTimeout(() => {
-                button.textContent = 'Add to Cart';
-                button.style.backgroundColor = '#3498db';
-            }, 1000);
+            // setTimeout(() => {
+            //     button.textContent = 'Add to Cart';
+            //     button.style.backgroundColor = '#3498db';
+            // }, 1000);
         });
     });
 
