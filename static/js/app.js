@@ -21,29 +21,56 @@ const confirmTopup = document.getElementById('confirmTopup');
 const topupAmount = document.getElementById('topupAmount');
 const paymentMethods = document.querySelectorAll('.payment-method');
 
+// API base URL - update this to match your server
+const API_BASE_URL = window.location.origin;
+
 // Fetch initial data
 async function fetchData() {
     try {
-        const response = await fetch('/api/init-data', {
+        console.log('Fetching data from:', `${API_BASE_URL}/api/init-data`);
+        const response = await fetch(`${API_BASE_URL}/api/init-data`, {
             headers: {
                 'Telegram-Data': tg.initData
             }
         });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        categories = data.categories;
-        products = data.products;
-        userBalance = data.balance;
+        console.log('Fetched data:', data);  // Debug log
+        
+        if (!data.categories || !Array.isArray(data.categories)) {
+            console.error('Invalid categories data:', data.categories);
+            throw new Error('Categories data is invalid');
+        }
+        if (!data.products || !Array.isArray(data.products)) {
+            console.error('Invalid products data:', data.products);
+            throw new Error('Products data is invalid');
+        }
+        
+        categories = data.categories || [];
+        products = data.products || [];
+        userBalance = data.balance || 0;
+        
+        console.log('Processed data:', {
+            categoriesCount: categories.length,
+            productsCount: products.length,
+            balance: userBalance
+        });
         
         renderCategories();
         renderProducts();
         updateBalance();
     } catch (error) {
         console.error('Error fetching data:', error);
+        // Show error to user
+        alert('Failed to load store data. Please try again later.');
     }
 }
 
 // Render functions
 function renderCategories() {
+    console.log('Rendering categories:', categories);  // Debug log
     categoryList.innerHTML = categories.map(category => `
         <div class="category-item" data-id="${category.id}">
             ${category.name}
@@ -60,6 +87,7 @@ function renderCategories() {
 }
 
 function renderProducts() {
+    console.log('Rendering products:', products);  // Debug log
     const filteredProducts = selectedCategory
         ? products.filter(p => p.category_id === parseInt(selectedCategory))
         : products;
@@ -162,7 +190,7 @@ confirmTopup.addEventListener('click', async () => {
     if (!amount || !selectedPaymentMethod) return;
 
     try {
-        const response = await fetch('/api/topup', {
+        const response = await fetch(`${API_BASE_URL}/api/topup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -174,20 +202,29 @@ confirmTopup.addEventListener('click', async () => {
             })
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         if (data.success) {
             userBalance = data.newBalance;
             updateBalance();
             topupModal.style.display = 'none';
+            alert('Balance updated successfully!');
         }
     } catch (error) {
         console.error('Error processing payment:', error);
+        alert('Failed to process payment. Please try again.');
     }
 });
 
 // Checkout handling
 document.getElementById('checkoutBtn').addEventListener('click', async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0) {
+        alert('Your cart is empty!');
+        return;
+    }
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     if (total > userBalance) {
@@ -196,7 +233,7 @@ document.getElementById('checkoutBtn').addEventListener('click', async () => {
     }
 
     try {
-        const response = await fetch('/api/checkout', {
+        const response = await fetch(`${API_BASE_URL}/api/checkout`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -205,18 +242,26 @@ document.getElementById('checkoutBtn').addEventListener('click', async () => {
             body: JSON.stringify({ cart })
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         if (data.success) {
             userBalance = data.newBalance;
             cart = [];
             updateCart();
             updateBalance();
-            tg.showAlert('Order placed successfully!');
+            alert('Order placed successfully!');
         }
     } catch (error) {
         console.error('Error processing order:', error);
+        alert('Failed to process order. Please try again.');
     }
 });
 
 // Initialize
-fetchData();
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('WebApp initialized');  // Debug log
+    fetchData();
+});
