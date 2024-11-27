@@ -4,15 +4,51 @@ let products = [];
 let currentCategory = null;
 const API_BASE_URL = 'http://localhost:8080';
 
+// Initialize Telegram WebApp
+const tg = window.Telegram.WebApp;
+tg.expand();
+
+// Get user data
+const initData = tg.initData || '';
+const userID = tg.initDataUnsafe?.user?.id;
+
+// Headers for API requests
+const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'X-Telegram-User-Id': userID || '',
+    'X-Telegram-Init-Data': initData
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
+    if (!userID) {
+        showError('Unable to get user data from Telegram');
+        return;
+    }
     await loadCategories();
     await loadProducts();
     updateCartCount();
+    await loadUserBalance();
 });
+
+async function loadUserBalance() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/user/balance`, {
+            headers: getHeaders()
+        });
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('user-balance').textContent = data.balance.toFixed(2);
+        }
+    } catch (error) {
+        console.error('Error loading balance:', error);
+    }
+}
 
 async function loadCategories() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/categories`);
+        const response = await fetch(`${API_BASE_URL}/api/categories`, {
+            headers: getHeaders()
+        });
         categories = await response.json();
         renderCategories();
     } catch (error) {
@@ -26,7 +62,9 @@ async function loadProducts(categoryId = null) {
         const url = categoryId ? 
             `${API_BASE_URL}/api/products?category=${categoryId}` : 
             `${API_BASE_URL}/api/products`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: getHeaders()
+        });
         products = await response.json();
         renderProducts();
     } catch (error) {
@@ -164,9 +202,7 @@ async function checkout() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/checkout`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getHeaders(),
             body: JSON.stringify({ items: cart })
         });
 
@@ -177,6 +213,7 @@ async function checkout() {
             updateCartCount();
             hideCart();
             showSuccess('Order placed successfully!');
+            await loadUserBalance(); // Refresh balance after successful order
         } else {
             showError(result.message || 'Checkout failed');
         }
@@ -213,15 +250,13 @@ async function topUpBalance() {
     try {
         const response = await fetch(`${API_BASE_URL}/api/topup`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: getHeaders(),
             body: JSON.stringify({ amount: parseFloat(amount) })
         });
 
         const result = await response.json();
         
-        if (result.paymentUrl) {
+        if (result.success && result.paymentUrl) {
             window.location.href = result.paymentUrl;
         } else {
             showError(result.message || 'Failed to initiate top up');
