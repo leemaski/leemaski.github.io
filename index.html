@@ -14,7 +14,7 @@
             <div class="menu-toggle" id="mobile-menu">
                 <i class="fas fa-bars"></i>
             </div>
-            <div class="logo" id="logo-username"></div>
+            <div class="logo" id="logo-username">USERNAME</div>
             <ul class="nav-links">
                 <li><a href="#" class="active">Home</a></li>
                 <li><a href="#">Products</a></li>
@@ -53,7 +53,7 @@
                 <div class="product-card">
                     <h3>Premium Headphones</h3>
                     <p class="price">$99.99</p>
-                    <button class="add-to-cart">ДОБАВИТЬ</button>
+                    <button class="add-to-cart" data-toggle="modal" data-target="#openModal">ДОБАВИТЬ</button>
                 </div>
                 <div class="product-card">
                     <h3>Smart Watch</h3>
@@ -72,6 +72,21 @@
                 </div>
             </div>
         </section>
+
+        <div id="openModal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Название</h3>
+                        <a href="#close" title="Close" class="close">×</a>
+                    </div>
+                    <div class="modal-body">    
+                        <p>Содержимое модального окна...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <footer>
