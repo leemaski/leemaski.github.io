@@ -2,6 +2,7 @@ let cart = [];
 let categories = [];
 let products = [];
 let currentCategory = null;
+const API_BASE_URL = 'http://localhost:8080';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadCategories();
@@ -11,22 +12,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadCategories() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch(`${API_BASE_URL}/api/categories`);
         categories = await response.json();
         renderCategories();
     } catch (error) {
         showError('Failed to load categories');
+        console.error('Error loading categories:', error);
     }
 }
 
 async function loadProducts(categoryId = null) {
     try {
-        const url = categoryId ? `/api/products?category=${categoryId}` : '/api/products';
+        const url = categoryId ? 
+            `${API_BASE_URL}/api/products?category=${categoryId}` : 
+            `${API_BASE_URL}/api/products`;
         const response = await fetch(url);
         products = await response.json();
         renderProducts();
     } catch (error) {
         showError('Failed to load products');
+        console.error('Error loading products:', error);
     }
 }
 
@@ -157,7 +162,7 @@ function removeFromCart(productId) {
 
 async function checkout() {
     try {
-        const response = await fetch('/api/checkout', {
+        const response = await fetch(`${API_BASE_URL}/api/checkout`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -177,6 +182,7 @@ async function checkout() {
         }
     } catch (error) {
         showError('Failed to process checkout');
+        console.error('Error processing checkout:', error);
     }
 }
 
@@ -205,7 +211,7 @@ async function topUpBalance() {
     }
 
     try {
-        const response = await fetch('/api/topup', {
+        const response = await fetch(`${API_BASE_URL}/api/topup`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -222,5 +228,6 @@ async function topUpBalance() {
         }
     } catch (error) {
         showError('Failed to process top up request');
+        console.error('Error processing top up request:', error);
     }
 }
