@@ -4,7 +4,7 @@ tg.expand();
 // Initialize variables
 let currentCategory = null;
 let userBalance = 0;
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'https://leemaski.github.io/webapp/api';
 
 // DOM Elements
 const categoriesContainer = document.getElementById('categories');
