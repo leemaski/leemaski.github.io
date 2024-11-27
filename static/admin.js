@@ -11,19 +11,16 @@ async function loadProducts() {
         
         products.forEach(product => {
             const productCard = document.createElement('div');
-            productCard.className = 'item-card';
+            productCard.className = 'product-card admin-card';
             productCard.innerHTML = `
-                <div class="header">
-                    <div class="title">${product.name}</div>
-                    <div class="actions">
-                        <button class="btn-secondary" onclick="editProduct(${product.id})">Edit</button>
-                        <button class="btn-secondary" onclick="deleteProduct(${product.id})">Delete</button>
-                    </div>
+                <div class="product-info">
+                    <div class="product-title">${product.name}</div>
+                    <div class="product-price">$${product.price.toFixed(2)}</div>
+                    <div class="product-stock">Stock: ${product.stock}</div>
                 </div>
-                <div class="details">
-                    <div>Price: $${product.price}</div>
-                    <div>Stock: ${product.stock}</div>
-                    <div>Description: ${product.description}</div>
+                <div class="admin-actions">
+                    <button class="btn-secondary" onclick="editProduct(${JSON.stringify(product)})">Edit</button>
+                    <button class="btn-danger" onclick="deleteProduct(${product.id})">Delete</button>
                 </div>
             `;
             productsList.appendChild(productCard);
@@ -43,19 +40,19 @@ async function loadCategories() {
         const categorySelect = document.getElementById('productCategory');
         
         categoriesList.innerHTML = '';
-        categorySelect.innerHTML = '';
+        categorySelect.innerHTML = '<option value="">Select Category</option>';
         
         categories.forEach(category => {
             // Add to categories list
             const categoryCard = document.createElement('div');
-            categoryCard.className = 'item-card';
+            categoryCard.className = 'category-card admin-card';
             categoryCard.innerHTML = `
-                <div class="header">
-                    <div class="title">${category.name}</div>
-                    <div class="actions">
-                        <button class="btn-secondary" onclick="editCategory(${category.id})">Edit</button>
-                        <button class="btn-secondary" onclick="deleteCategory(${category.id})">Delete</button>
-                    </div>
+                <div class="category-info">
+                    <div class="category-name">${category.name}</div>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn-secondary" onclick="editCategory(${JSON.stringify(category)})">Edit</button>
+                    <button class="btn-danger" onclick="deleteCategory(${category.id})">Delete</button>
                 </div>
             `;
             categoriesList.appendChild(categoryCard);
@@ -82,24 +79,17 @@ async function loadUsers() {
         
         users.forEach(user => {
             const userCard = document.createElement('div');
-            userCard.className = 'item-card';
+            userCard.className = 'user-card admin-card';
             userCard.innerHTML = `
-                <div class="header">
-                    <div class="title">
-                        ID: ${user.telegram_id}
-                        ${user.is_admin ? '<span class="admin-badge">Admin</span>' : ''}
-                        <span class="user-status ${user.is_blocked ? 'blocked' : 'active'}">
-                            ${user.is_blocked ? 'Blocked' : 'Active'}
-                        </span>
-                    </div>
-                    <div class="actions">
-                        <button class="btn-secondary" onclick="toggleUserBlock(${user.telegram_id}, ${!user.is_blocked})">
-                            ${user.is_blocked ? 'Unblock' : 'Block'}
-                        </button>
-                    </div>
+                <div class="user-info">
+                    <div class="user-name">${user.name}</div>
+                    <div class="user-id">ID: ${user.id}</div>
                 </div>
-                <div class="details">
-                    <div>Balance: $${user.balance.toFixed(2)}</div>
+                <div class="admin-actions">
+                    <button class="btn-${user.is_blocked ? 'secondary' : 'danger'}" 
+                            onclick="toggleUserBlock(${user.id}, ${!user.is_blocked})">
+                        ${user.is_blocked ? 'Unblock' : 'Block'}
+                    </button>
                 </div>
             `;
             usersList.appendChild(userCard);
@@ -110,25 +100,145 @@ async function loadUsers() {
     }
 }
 
-// Modal handling
+// Product management
+let currentProductId = null;
 const productModal = document.getElementById('productModal');
-const categoryModal = document.getElementById('categoryModal');
-const closeButtons = document.querySelectorAll('.close-modal');
+const addProductBtn = document.getElementById('addProductBtn');
 
-document.getElementById('addProductBtn').onclick = () => {
+addProductBtn.onclick = () => {
+    currentProductId = null;
+    document.getElementById('productName').value = '';
+    document.getElementById('productDescription').value = '';
+    document.getElementById('productPrice').value = '';
+    document.getElementById('productStock').value = '';
+    document.getElementById('productCategory').value = '';
     productModal.style.display = 'block';
 };
 
-document.getElementById('addCategoryBtn').onclick = () => {
+function editProduct(product) {
+    currentProductId = product.id;
+    document.getElementById('productName').value = product.name;
+    document.getElementById('productDescription').value = product.description;
+    document.getElementById('productPrice').value = product.price;
+    document.getElementById('productStock').value = product.stock;
+    document.getElementById('productCategory').value = product.category_id;
+    productModal.style.display = 'block';
+}
+
+document.getElementById('saveProduct').onclick = async () => {
+    const productData = {
+        name: document.getElementById('productName').value,
+        description: document.getElementById('productDescription').value,
+        price: parseFloat(document.getElementById('productPrice').value),
+        stock: parseInt(document.getElementById('productStock').value),
+        category_id: parseInt(document.getElementById('productCategory').value)
+    };
+    
+    try {
+        const response = await fetch('/api/products' + (currentProductId ? `/${currentProductId}` : ''), {
+            method: currentProductId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        });
+        
+        if (response.ok) {
+            productModal.style.display = 'none';
+            loadProducts();
+            tg.showAlert(currentProductId ? 'Product updated!' : 'Product added!');
+        } else {
+            const error = await response.json();
+            tg.showAlert('Error: ' + error.detail);
+        }
+    } catch (error) {
+        console.error('Error saving product:', error);
+        tg.showAlert('Error saving product');
+    }
+};
+
+async function deleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+        const response = await fetch(`/api/products/${productId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            loadProducts();
+            tg.showAlert('Product deleted!');
+        } else {
+            const error = await response.json();
+            tg.showAlert('Error: ' + error.detail);
+        }
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        tg.showAlert('Error deleting product');
+    }
+}
+
+// Category management
+let currentCategoryId = null;
+const categoryModal = document.getElementById('categoryModal');
+const addCategoryBtn = document.getElementById('addCategoryBtn');
+
+addCategoryBtn.onclick = () => {
+    currentCategoryId = null;
+    document.getElementById('categoryName').value = '';
     categoryModal.style.display = 'block';
 };
 
-closeButtons.forEach(button => {
-    button.onclick = () => {
-        productModal.style.display = 'none';
-        categoryModal.style.display = 'none';
+function editCategory(category) {
+    currentCategoryId = category.id;
+    document.getElementById('categoryName').value = category.name;
+    categoryModal.style.display = 'block';
+}
+
+document.getElementById('saveCategory').onclick = async () => {
+    const categoryData = {
+        name: document.getElementById('categoryName').value
     };
-});
+    
+    try {
+        const response = await fetch('/api/categories' + (currentCategoryId ? `/${currentCategoryId}` : ''), {
+            method: currentCategoryId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(categoryData)
+        });
+        
+        if (response.ok) {
+            categoryModal.style.display = 'none';
+            loadCategories();
+            tg.showAlert(currentCategoryId ? 'Category updated!' : 'Category added!');
+        } else {
+            const error = await response.json();
+            tg.showAlert('Error: ' + error.detail);
+        }
+    } catch (error) {
+        console.error('Error saving category:', error);
+        tg.showAlert('Error saving category');
+    }
+};
+
+async function deleteCategory(categoryId) {
+    if (!confirm('Are you sure you want to delete this category?')) return;
+    
+    try {
+        const response = await fetch(`/api/categories/${categoryId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            loadCategories();
+            tg.showAlert('Category deleted!');
+        } else {
+            const error = await response.json();
+            tg.showAlert('Error: ' + error.detail);
+        }
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        tg.showAlert('Error deleting category');
+    }
+}
 
 // User management
 async function toggleUserBlock(userId, blockStatus) {
@@ -139,21 +249,32 @@ async function toggleUserBlock(userId, blockStatus) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                user_id: userId
+                user_id: userId,
+                block_status: blockStatus
             })
         });
         
         if (response.ok) {
             loadUsers();
-            tg.showAlert(`User ${blockStatus ? 'blocked' : 'unblocked'} successfully`);
+            tg.showAlert(`User ${blockStatus ? 'blocked' : 'unblocked'}!`);
         } else {
-            tg.showAlert('Error updating user status');
+            const error = await response.json();
+            tg.showAlert('Error: ' + error.detail);
         }
     } catch (error) {
-        console.error('Error toggling user block status:', error);
+        console.error('Error toggling user block:', error);
         tg.showAlert('Error updating user status');
     }
 }
+
+// Modal close buttons
+document.querySelectorAll('.close-modal').forEach(button => {
+    button.onclick = () => {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+        });
+    };
+});
 
 // Initialize
 loadProducts();
