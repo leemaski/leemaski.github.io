@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Shop</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Каталог товаров</h1>
+        </header>
+        <main id="products-container">
+            <!-- Продукты будут добавлены через JavaScript -->
+        </main>
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item" data-page="catalog">
+                <i class="icon-home"></i>
+                Главная
+            </a>
+            <a href="#" class="nav-item" data-page="cart">
+                <i class="icon-cart"></i>
+                Корзина
+            </a>
+        </nav>
+    </div>
+    <script src="./js/config.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>
